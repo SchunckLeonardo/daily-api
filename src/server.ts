@@ -1,7 +1,5 @@
-import fastify from 'fastify'
 import { env } from './env'
-
-const app = fastify()
+import { app } from './app'
 
 app.listen({ port: env.PORT }).then(() => {
   console.log(`Server running on port ${env.PORT}`)
