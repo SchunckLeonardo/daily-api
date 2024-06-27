@@ -55,6 +55,53 @@ export async function mealsRoutes(app: FastifyInstance) {
     }
   })
 
+  app.get('/summary', async (req, res) => {
+    const userId = req.cookies.userId
+
+    const [countMeals, mealsInRegimen, mealsOutRegimen, meals] =
+      await prisma.$transaction([
+        prisma.meal.count({
+          where: { userId },
+        }),
+        prisma.meal.count({
+          where: { userId, inRegimen: true },
+        }),
+        prisma.meal.count({
+          where: { userId, inRegimen: false },
+        }),
+        prisma.meal.findMany({
+          where: { userId, inRegimen: true },
+          orderBy: {
+            dateAndHour: 'asc',
+          },
+        }),
+      ])
+
+    let sequentialCount = 0
+    let currentDate: string | null = null
+    let currentCount = 0
+
+    meals.forEach((meal) => {
+      const mealDate = new Date(meal.dateAndHour).toDateString()
+      if (mealDate === currentDate) {
+        currentCount++
+      } else {
+        currentDate = mealDate
+        currentCount = 1
+      }
+      if (currentCount > sequentialCount) {
+        sequentialCount = currentCount
+      }
+    })
+
+    return res.status(200).send({
+      meals: countMeals,
+      inRegimen: mealsInRegimen,
+      outRegimen: mealsOutRegimen,
+      sequential: sequentialCount,
+    })
+  })
+
   app.delete('/:id', async (req, res) => {
     const paramsDeleteMealSchema = z.object({
       id: z.string().uuid(),
