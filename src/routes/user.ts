@@ -20,6 +20,8 @@ export async function userRoutes(app: FastifyInstance) {
       },
     })
 
+    res.cookie('userId', user.id)
+
     return res.status(401).send({
       status: 'created',
       user,
