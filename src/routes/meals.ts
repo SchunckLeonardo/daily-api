@@ -7,17 +7,37 @@ import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library'
 export async function mealsRoutes(app: FastifyInstance) {
   app.addHook('preHandler', verifyUserAuthentication)
 
+  app.get('/', async (req, res) => {
+    const userId = req.cookies.userId
+
+    const [meals, count] = await prisma.$transaction([
+      prisma.meal.findMany({
+        where: { userId },
+      }),
+      prisma.meal.count({
+        where: { userId },
+      }),
+    ])
+
+    return res.status(200).send({
+      meals,
+      count,
+    })
+  })
+
   app.delete('/:id', async (req, res) => {
     const paramsDeleteMealSchema = z.object({
       id: z.string().uuid(),
     })
 
     const { id } = paramsDeleteMealSchema.parse(req.params)
+    const userId = req.cookies.userId
 
     try {
       await prisma.meal.delete({
         where: {
           id,
+          userId,
         },
       })
 
@@ -76,10 +96,13 @@ export async function mealsRoutes(app: FastifyInstance) {
     const { dateAndHour, description, inRegimen, name } =
       bodyEditMealSchema.parse(req.body)
 
+    const userId = req.cookies.userId
+
     try {
       const mealUpdated = await prisma.meal.update({
         where: {
           id,
+          userId,
         },
         data: {
           name,
