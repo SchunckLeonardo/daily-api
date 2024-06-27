@@ -1,8 +1,9 @@
-import { FastifyReply, FastifyRequest } from 'fastify'
+import { FastifyError, FastifyReply, FastifyRequest } from 'fastify'
 
 export function verifyUserAuthentication(
   req: FastifyRequest,
   res: FastifyReply,
+  done: (err?: FastifyError) => void,
 ) {
   const userId = req.cookies.userId
 
@@ -11,4 +12,6 @@ export function verifyUserAuthentication(
       status: 'Unauthorized',
     })
   }
+
+  done()
 }
