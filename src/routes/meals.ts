@@ -25,6 +25,36 @@ export async function mealsRoutes(app: FastifyInstance) {
     })
   })
 
+  app.get('/:id', async (req, res) => {
+    const paramsGetMealSchema = z.object({
+      id: z.string().uuid(),
+    })
+
+    const { id } = paramsGetMealSchema.parse(req.params)
+
+    const userId = req.cookies.userId
+
+    try {
+      const meal = await prisma.meal.findFirst({
+        where: {
+          id,
+          userId,
+        },
+      })
+
+      return res.status(200).send({ meal })
+    } catch (err) {
+      if (err instanceof PrismaClientKnownRequestError) {
+        if (err.code === 'P2025') {
+          return res.status(404).send({ status: 'id not found' })
+        }
+      }
+      return res
+        .status(500)
+        .send({ status: `An unexpected error occurred: ${err}` })
+    }
+  })
+
   app.delete('/:id', async (req, res) => {
     const paramsDeleteMealSchema = z.object({
       id: z.string().uuid(),
