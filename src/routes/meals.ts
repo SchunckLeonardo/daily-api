@@ -38,10 +38,10 @@ export async function mealsRoutes(app: FastifyInstance) {
     })
 
     const bodyEditMealSchema = z.object({
-      name: z.string(),
-      description: z.string(),
-      dateAndHour: z.string(),
-      inRegimen: z.boolean(),
+      name: z.string().optional(),
+      description: z.string().optional(),
+      dateAndHour: z.string().optional(),
+      inRegimen: z.boolean().optional(),
     })
 
     const { id } = paramsEditMealSchema.parse(req.params)
@@ -60,10 +60,6 @@ export async function mealsRoutes(app: FastifyInstance) {
       },
     })
 
-    if (!mealUpdated) {
-      return res.status(404).send({ status: 'ID not found' })
-    }
-
-    return res.status(200).send({ status: 'updated' })
+    return res.status(200).send({ status: 'updated', meal: mealUpdated })
   })
 }
